@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Load the dataset
-df = pd.read_csv('student_admission.csv')
+df = pd.read_csv('student_admission2.csv')
 
 # Prepare features (X) and target (y)
 X = df[['exam1_score', 'exam2_score']].values
@@ -33,6 +33,35 @@ print("\nAccuracy Score:", accuracy_score(y_test, y_pred))
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred))
 
+# Calculate and plot confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.title('Confusion Matrix')
+plt.ylabel('True Label')
+plt.xlabel('Predicted Label')
+plt.savefig('confusion_matrix.png')
+plt.show()
+
+# Add detailed confusion matrix analysis
+print("\nConfusion Matrix Analysis:")
+tn, fp, fn, tp = cm.ravel()
+print(f"True Negatives: {tn}")
+print(f"False Positives: {fp}")
+print(f"False Negatives: {fn}")
+print(f"True Positives: {tp}")
+
+# Calculate additional metrics
+precision = tp / (tp + fp)
+recall = tp / (tp + fn)
+f1 = 2 * (precision * recall) / (precision + recall)
+
+print("\nDetailed Metrics:")
+print(f"Precision: {precision:.2f}")
+print(f"Recall: {recall:.2f}")
+print(f"F1 Score: {f1:.2f}")
+
 # Create a visualization
 plt.figure(figsize=(10, 8))
 
@@ -49,7 +78,6 @@ xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1),
 # Make predictions on mesh grid points
 Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
 Z = Z.reshape(xx.shape)
-
 
 
 # Example predictions
