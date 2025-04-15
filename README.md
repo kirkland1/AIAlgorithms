@@ -33,7 +33,6 @@ eg. python salary_linear_regression.py
 
 Please send an email with the issues.
 
-```
 
 ## Authors
 
