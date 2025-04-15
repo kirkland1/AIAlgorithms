@@ -40,7 +40,7 @@ Please send an email with the issues.
 Contributors names and contact info
 
 Selvan Rajan
-selvanvrajan@gmail.com
+[@Email](selvanvrajan@gmail.com)
 
 ## Version History
 
@@ -52,7 +52,7 @@ selvanvrajan@gmail.com
 
 ## License
 
-This project is licensed under the MIT License - see the license [here](https://opensource.org/license/mit)
+* This project is licensed under the MIT License - see the license [@here](https://opensource.org/license/mit)
 
 ## Acknowledgments
 
