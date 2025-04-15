@@ -21,16 +21,18 @@ pip install -r requirements.txt
 ### Executing program
 
 * How to run the program
-* Step-by-step bullets
+* Go to the folder of your interest
+
 ```
-code blocks for commands
+pip install -r requirements.txt
+python <algorithm.py>
+eg. python salary_linear_regression.py
 ```
 
 ## Help
 
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
+Please send an email with the issues.
+
 ```
 
 ## Authors
@@ -50,7 +52,7 @@ selvanvrajan@gmail.com
 
 ## License
 
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
+This project is licensed under the MIT License - see the license here [https://opensource.org/license/mit]()
 
 ## Acknowledgments
 

@@ -32,6 +32,11 @@ print(f'Coefficient: {model.coef_[0]:.2f}')
 print(f'Mean Squared Error: {mse:.2f}')
 print(f'R² Score: {r2:.4f}')
 
+# Example prediction
+years_exp = np.array([[5.0]])
+predicted_salary = model.predict(years_exp)
+print(f'\nPredicted salary for 5 years of experience: ${predicted_salary[0]:.2f}')
+
 # Visualize the results
 plt.figure(figsize=(10, 6))
 plt.scatter(X, y, color='blue', label='Actual Data')
@@ -43,7 +48,3 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-# Example prediction
-years_exp = np.array([[5.0]])
-predicted_salary = model.predict(years_exp)
-print(f'\nPredicted salary for 5 years of experience: ${predicted_salary[0]:.2f}')
