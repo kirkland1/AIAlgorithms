@@ -10,112 +10,60 @@ def generate_customer_data(n_samples=1000):
     """Generate synthetic customer data with realistic marketing features"""
     np.random.seed(42)
     
-    # Define cluster characteristics
-    cluster_profiles = {
-        'Loyal Tech Enthusiasts': {
-            'spending_range': (5000, 10000),
-            'frequency_range': (8, 12),
-            'electronics_ratio': 0.7,
-            'age_range': (25, 45),
-            'urban_ratio': 0.8
-        },
-        'Discount Shoppers': {
-            'spending_range': (500, 2000),
-            'frequency_range': (1, 3),
-            'electronics_ratio': 0.2,
-            'age_range': (40, 65),
-            'urban_ratio': 0.3
-        },
-        'Average Young Spenders': {
-            'spending_range': (2000, 5000),
-            'frequency_range': (4, 7),
-            'electronics_ratio': 0.4,
-            'age_range': (18, 35),
-            'urban_ratio': 0.6
-        }
-    }
+    # Generate features with realistic distributions
+    # High spenders (20% of customers)
+    high_spenders = int(n_samples * 0.2)
+    total_spent_high = np.random.normal(7500, 1000, high_spenders)
+    frequency_high = np.random.normal(10, 1, high_spenders)
     
-    data = []
-    labels = []
+    # Medium spenders (50% of customers)
+    medium_spenders = int(n_samples * 0.5)
+    total_spent_medium = np.random.normal(3500, 500, medium_spenders)
+    frequency_medium = np.random.normal(5, 1, medium_spenders)
     
-    for cluster_name, profile in cluster_profiles.items():
-        n_cluster_samples = n_samples // len(cluster_profiles)
-        
-        # Generate features based on cluster profile
-        total_spent = np.random.uniform(
-            profile['spending_range'][0],
-            profile['spending_range'][1],
-            n_cluster_samples
-        )
-        
-        frequency = np.random.uniform(
-            profile['frequency_range'][0],
-            profile['frequency_range'][1],
-            n_cluster_samples
-        )
-        
-        avg_transaction = total_spent / (frequency * 12)  # Monthly average
-        
-        # Generate product category spending ratios
-        electronics = np.random.normal(
-            profile['electronics_ratio'],
-            0.1,
-            n_cluster_samples
-        )
-        clothing = np.random.normal(0.3, 0.1, n_cluster_samples)
-        groceries = 1 - electronics - clothing
-        
-        # Generate demographic features
-        age = np.random.uniform(
-            profile['age_range'][0],
-            profile['age_range'][1],
-            n_cluster_samples
-        )
-        
-        # Location (1 for urban, 0 for suburban)
-        location = np.random.binomial(1, profile['urban_ratio'], n_cluster_samples)
-        
-        # Combine features
-        cluster_data = np.column_stack((
-            total_spent,
-            avg_transaction,
-            frequency,
-            electronics,
-            clothing,
-            groceries,
-            age,
-            location
-        ))
-        
-        data.append(cluster_data)
-        labels.extend([cluster_name] * n_cluster_samples)
+    # Low spenders (30% of customers)
+    low_spenders = n_samples - high_spenders - medium_spenders
+    total_spent_low = np.random.normal(1500, 300, low_spenders)
+    frequency_low = np.random.normal(2, 0.5, low_spenders)
     
-    # Combine all clusters
-    X = np.vstack(data)
+    # Combine spending data
+    total_spent = np.concatenate([total_spent_high, total_spent_medium, total_spent_low])
+    frequency = np.concatenate([frequency_high, frequency_medium, frequency_low])
+    
+    # Calculate average transaction
+    avg_transaction = total_spent / (frequency * 12)
+    
+    # Generate product preferences
+    # Electronics preference (higher for younger customers)
+    age = np.random.normal(35, 15, n_samples)
+    electronics_ratio = np.clip(0.1 + (35 - age) / 100 + np.random.normal(0, 0.1, n_samples), 0, 1)
+    
+    # Clothing preference (relatively stable)
+    clothing_ratio = np.random.normal(0.3, 0.1, n_samples)
+    
+    # Groceries (remaining ratio)
+    groceries_ratio = 1 - electronics_ratio - clothing_ratio
+    
+    # Location (urban vs suburban)
+    # Higher probability of urban for higher spenders
+    urban_prob = np.clip(total_spent / 10000, 0.1, 0.9)
+    location = np.random.binomial(1, urban_prob)
     
     # Create DataFrame
-    df = pd.DataFrame(X, columns=[
-        'total_spent',
-        'avg_transaction',
-        'frequency',
-        'electronics_ratio',
-        'clothing_ratio',
-        'groceries_ratio',
-        'age',
-        'location'
-    ])
-    
-    # Add noise to make it more realistic
-    for col in df.columns:
-        if col != 'location':  # Don't add noise to binary location
-            df[col] += np.random.normal(0, df[col].std() * 0.1, len(df))
+    df = pd.DataFrame({
+        'total_spent': total_spent,
+        'avg_transaction': avg_transaction,
+        'frequency': frequency,
+        'electronics_ratio': electronics_ratio,
+        'clothing_ratio': clothing_ratio,
+        'groceries_ratio': groceries_ratio,
+        'age': age,
+        'location': location
+    })
     
     # Ensure ratios sum to 1
     ratio_cols = ['electronics_ratio', 'clothing_ratio', 'groceries_ratio']
     df[ratio_cols] = df[ratio_cols].div(df[ratio_cols].sum(axis=1), axis=0)
-    
-    # Add cluster labels
-    df['customer_segment'] = labels
     
     return df
 
@@ -169,20 +117,64 @@ def plot_customer_clusters(data, labels, title):
     plt.close()
 
 def analyze_clusters(data, labels):
-    """Analyze and print cluster characteristics"""
-    print("\nCluster Analysis:")
-    for cluster in data['customer_segment'].unique():
-        cluster_data = data[data['customer_segment'] == cluster]
-        print(f"\n{cluster}:")
+    """Analyze and interpret discovered customer segments"""
+    print("\nDiscovered Customer Segments Analysis:")
+    
+    for cluster_id in np.unique(labels):
+        cluster_data = data[labels == cluster_id]
+        
+        # Calculate segment characteristics
+        avg_spent = cluster_data['total_spent'].mean()
+        avg_freq = cluster_data['frequency'].mean()
+        avg_age = cluster_data['age'].mean()
+        urban_ratio = cluster_data['location'].mean()
+        electronics_ratio = cluster_data['electronics_ratio'].mean()
+        
+        # Determine segment type based on characteristics
+        if avg_spent > 6000 and avg_freq > 8:
+            segment_type = "High-Value Frequent Shoppers"
+        elif avg_spent < 2000 and avg_freq < 3:
+            segment_type = "Budget-Conscious Infrequent Shoppers"
+        elif avg_age < 30 and electronics_ratio > 0.5:
+            segment_type = "Young Tech Enthusiasts"
+        elif urban_ratio > 0.7 and avg_spent > 4000:
+            segment_type = "Urban Premium Shoppers"
+        else:
+            segment_type = "General Shoppers"
+        
+        print(f"\nSegment {cluster_id + 1} ({segment_type}):")
         print(f"Number of customers: {len(cluster_data)}")
-        print(f"Average total spent: ${cluster_data['total_spent'].mean():.2f}")
-        print(f"Average monthly frequency: {cluster_data['frequency'].mean():.2f}")
-        print(f"Average age: {cluster_data['age'].mean():.1f}")
-        print(f"Urban customers: {cluster_data['location'].mean()*100:.1f}%")
+        print(f"Average total spent: ${avg_spent:.2f}")
+        print(f"Average monthly frequency: {avg_freq:.2f}")
+        print(f"Average age: {avg_age:.1f}")
+        print(f"Urban customers: {urban_ratio*100:.1f}%")
         print("Average spending ratios:")
-        print(f"  Electronics: {cluster_data['electronics_ratio'].mean()*100:.1f}%")
+        print(f"  Electronics: {electronics_ratio*100:.1f}%")
         print(f"  Clothing: {cluster_data['clothing_ratio'].mean()*100:.1f}%")
         print(f"  Groceries: {cluster_data['groceries_ratio'].mean()*100:.1f}%")
+        
+        # Marketing recommendations
+        print("\nMarketing Recommendations:")
+        if "High-Value" in segment_type:
+            print("- Premium loyalty program")
+            print("- Early access to new products")
+            print("- Personalized shopping experiences")
+        elif "Budget-Conscious" in segment_type:
+            print("- Discount and sale notifications")
+            print("- Budget-friendly product recommendations")
+            print("- Value bundles and packages")
+        elif "Tech Enthusiasts" in segment_type:
+            print("- Latest tech product announcements")
+            print("- Tech accessories and upgrades")
+            print("- Gaming and entertainment offers")
+        elif "Urban Premium" in segment_type:
+            print("- Premium urban lifestyle products")
+            print("- Convenience-focused services")
+            print("- Local store events and experiences")
+        else:
+            print("- General promotions")
+            print("- Seasonal offers")
+            print("- Cross-category recommendations")
 
 def main():
     # Generate customer data
@@ -190,40 +182,33 @@ def main():
     data = generate_customer_data(n_samples=1000)
     
     # Save data to CSV
-    data.to_csv('customer_segments.csv', index=False)
-    print("Data saved to 'customer_segments.csv'")
+    data.to_csv('customer_data.csv', index=False)
+    print("Data saved to 'customer_data.csv'")
     
     # Display data information
     print("\nDataset Information:")
     print(f"Number of customers: {len(data)}")
-    print(f"Number of features: {len(data.columns) - 1}")  # Excluding segment column
+    print(f"Number of features: {len(data.columns)}")
     print("\nFirst 5 rows:")
     print(data.head())
     
-    # Prepare data for clustering
-    X = data.drop('customer_segment', axis=1)
-    true_labels = data['customer_segment']
-    
     # Scale the data
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    
-    # Plot original clusters
-    plot_customer_clusters(data, true_labels, "Original Customer Segments")
+    X_scaled = scaler.fit_transform(data)
     
     # Perform k-means clustering
     print("\nPerforming k-means clustering...")
-    kmeans = KMeans(n_clusters=3, random_state=42)
+    kmeans = KMeans(n_clusters=4, random_state=42)  # Let's try 4 clusters
     kmeans.fit(X_scaled)
     
     # Add cluster labels to data
-    data['predicted_segment'] = kmeans.labels_
+    data['discovered_segment'] = kmeans.labels_
     
-    # Plot predicted clusters
-    plot_customer_clusters(data, kmeans.labels_, "Predicted Customer Segments")
+    # Plot customer clusters
+    plot_customer_clusters(data, kmeans.labels_, "Discovered Customer Segments")
     
-    # Analyze clusters
-    analyze_clusters(data, true_labels)
+    # Analyze and interpret clusters
+    analyze_clusters(data, kmeans.labels_)
     
     # Evaluate clustering
     silhouette_avg = silhouette_score(X_scaled, kmeans.labels_)
