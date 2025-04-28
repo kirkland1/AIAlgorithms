@@ -101,10 +101,56 @@ def plot_feature_importance(X, y):
     plt.savefig('feature_distributions.png')
     plt.close()
 
+def analyze_word_count_distribution(df):
+    """Analyze and visualize word count distribution"""
+    # Calculate statistics for each class
+    spam_stats = df[df['is_spam'] == 1]['word_count'].describe()
+    not_spam_stats = df[df['is_spam'] == 0]['word_count'].describe()
+    
+    print("\nWord Count Distribution Analysis:")
+    print("\nSpam Emails:")
+    print(f"Mean: {spam_stats['mean']:.1f} words")
+    print(f"Median: {spam_stats['50%']:.1f} words")
+    print(f"Min: {spam_stats['min']:.1f} words")
+    print(f"Max: {spam_stats['max']:.1f} words")
+    print(f"Standard Deviation: {spam_stats['std']:.1f} words")
+    
+    print("\nNot Spam Emails:")
+    print(f"Mean: {not_spam_stats['mean']:.1f} words")
+    print(f"Median: {not_spam_stats['50%']:.1f} words")
+    print(f"Min: {not_spam_stats['min']:.1f} words")
+    print(f"Max: {not_spam_stats['max']:.1f} words")
+    print(f"Standard Deviation: {not_spam_stats['std']:.1f} words")
+    
+    # Create detailed visualization
+    plt.figure(figsize=(15, 10))
+    
+    # Histogram with KDE
+    plt.subplot(2, 1, 1)
+    sns.histplot(data=df, x='word_count', hue='is_spam', kde=True, bins=20)
+    plt.title('Word Count Distribution by Email Type')
+    plt.xlabel('Word Count')
+    plt.ylabel('Frequency')
+    
+    # Box plot
+    plt.subplot(2, 1, 2)
+    sns.boxplot(data=df, x='is_spam', y='word_count')
+    plt.title('Word Count Box Plot by Email Type')
+    plt.xlabel('Is Spam (0=No, 1=Yes)')
+    plt.ylabel('Word Count')
+    
+    plt.tight_layout()
+    plt.savefig('word_count_distribution.png')
+    plt.close()
+
 def main():
     # Create the dataset
     print("Creating email classification dataset...")
     df = create_email_dataset(100)
+    
+    # Analyze word count distribution
+    print("\nAnalyzing word count distribution...")
+    analyze_word_count_distribution(df)
     
     # Prepare features and target
     X = df[['word_count', 'link_count', 'capital_ratio', 'exclamation_count', 'urgency_words']]
